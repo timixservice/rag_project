@@ -1,0 +1,93 @@
+# ================================================
+# KOTAEMON RAG PROJECT - DOCKER CONFIGURATION
+# ================================================
+
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV GRADIO_SERVER_NAME=0.0.0.0
+ENV GRADIO_SERVER_PORT=7860
+
+# Set work directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    build-essential \
+    wget \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements file and libraries first
+# Choose one of the following options:
+
+# Option 1: Full installation (recommended for production)
+COPY requirements.txt .
+COPY libs/ ./libs/
+
+# Option 2: Minimal installation (for lighter images)
+# COPY requirements-minimal.txt requirements.txt
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip
+
+# Install local kotaemon and ktem libraries first (they contain dependency definitions)
+RUN pip install --no-cache-dir -e "libs/kotaemon[all]"
+RUN pip install --no-cache-dir -e "libs/ktem"
+
+# Install additional dependencies from requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install GraphRAG dependencies (optional - uncomment as needed)
+# For NanoGraphRAG:
+# RUN pip install nano-graphrag
+
+# For LightRAG:
+# RUN pip install git+https://github.com/HKUDS/LightRAG.git
+
+# For Microsoft GraphRAG:
+# RUN pip install "graphrag<=0.3.6" future
+
+# For advanced document processing:
+# RUN pip install docling
+
+# Copy application code
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p ktem_app_data
+RUN mkdir -p ktem_app_data/user_data
+RUN mkdir -p ktem_app_data/gradio_tmp
+
+# Expose port
+EXPOSE 7860
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:7860/ || exit 1
+
+# Run the application
+CMD ["python", "app.py"]
+
+# ================================================
+# BUILD INSTRUCTIONS:
+# 
+# 1. Full version:
+#    docker build -t kotaemon:full .
+#
+# 2. Minimal version:
+#    docker build -t kotaemon:minimal --build-arg REQUIREMENTS=requirements-minimal.txt .
+#
+# RUN INSTRUCTIONS:
+#
+# docker run \
+#   -e GRADIO_SERVER_NAME=0.0.0.0 \
+#   -e GRADIO_SERVER_PORT=7860 \
+#   -v ./ktem_app_data:/app/ktem_app_data \
+#   -p 7860:7860 \
+#   -it --rm \
+#   kotaemon:full
+# ================================================

@@ -143,7 +143,10 @@ if config("AZURE_OPENAI_API_KEY", default="") and config(
 OPENAI_DEFAULT = "<YOUR_OPENAI_KEY>"
 OPENAI_API_KEY = config("OPENAI_API_KEY", default=OPENAI_DEFAULT)
 GOOGLE_API_KEY = config("GOOGLE_API_KEY", default="your-key")
-IS_OPENAI_DEFAULT = len(OPENAI_API_KEY) > 0 and OPENAI_API_KEY != OPENAI_DEFAULT
+# Fix: Better detection of valid OpenAI API key
+IS_OPENAI_DEFAULT = (len(OPENAI_API_KEY) > 0 and 
+                    OPENAI_API_KEY != OPENAI_DEFAULT and 
+                    OPENAI_API_KEY.startswith("sk-"))
 
 if OPENAI_API_KEY:
     KH_LLMS["openai"] = {
@@ -288,7 +291,7 @@ KH_EMBEDDINGS["google"] = {
         "model": "models/text-embedding-004",
         "google_api_key": GOOGLE_API_KEY,
     },
-    "default": not IS_OPENAI_DEFAULT,
+    "default": False,  # Force OpenAI as default, disable Google fallback
 }
 KH_EMBEDDINGS["mistral"] = {
     "spec": {
@@ -310,7 +313,7 @@ KH_EMBEDDINGS["mistral"] = {
 KH_RERANKINGS["cohere"] = {
     "spec": {
         "__type__": "kotaemon.rerankings.CohereReranking",
-        "model_name": "rerank-multilingual-v2.0",
+        "model_name": "rerank-multilingual-v3.5",
         "cohere_api_key": config("COHERE_API_KEY", default=""),
     },
     "default": True,

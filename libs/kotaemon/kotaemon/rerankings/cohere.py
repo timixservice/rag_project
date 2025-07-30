@@ -13,7 +13,7 @@ class CohereReranking(BaseReranking):
     """Cohere Reranking model"""
 
     model_name: str = Param(
-        "rerank-multilingual-v2.0",
+        "rerank-multilingual-v3.5",
         help=(
             "ID of the model to use. You can go to [Supported Models]"
             "(https://docs.cohere.com/docs/rerank-2) to see the supported models"

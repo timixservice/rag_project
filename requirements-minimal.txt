@@ -1,0 +1,47 @@
+# ================================================
+# KOTAEMON RAG PROJECT - MINIMAL DOCKER REQUIREMENTS
+# Para despliegues básicos sin funcionalidades avanzadas
+# ================================================
+
+# Core Framework
+theflow>=0.8.6,<0.9.0
+python-decouple
+python-dotenv>=1.0.1,<1.1
+platformdirs
+tzlocal
+
+# Web Framework & UI
+gradio>=4.31.0,<4.40
+fastapi<=0.112.1
+
+# Essential LLM Support
+openai>=1.23.6,<2
+langchain>=0.1.16,<0.2.16
+langchain-community>=0.0.34,<=0.2.11
+langchain-openai>=0.1.4,<0.2.0
+cohere>=5.3.2,<6
+
+# Basic Document Processing
+PyMuPDF>=1.23,<=1.24.11
+pypdf>=4.2.0,<4.3
+python-docx>=1.1.0,<1.2
+html2text==2024.2.26
+beautifulsoup4>=4.12.3,<4.13
+
+# Vector Store (ChromaDB only)
+chromadb<=0.5.16
+llama-index>=0.10.40,<0.11.0
+llama-index-vector-stores-chroma>=0.1.9
+
+# Basic Data Processing
+pandas>=2.2.2,<2.3
+matplotlib
+pydantic<=2.10.6
+
+# Utilities
+click>=8.1.7,<9
+tenacity>=8.2.3,<8.3
+fast_langdetect
+
+# Monitoring
+opentelemetry-exporter-otlp-proto-grpc>=1.25.0

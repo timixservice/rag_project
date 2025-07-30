@@ -1,0 +1,112 @@
+version: '3.8'
+
+services:
+  kotaemon:
+    build:
+      context: .
+      dockerfile: Dockerfile.example
+    container_name: kotaemon-app
+    ports:
+      - "7860:7860"
+    environment:
+      - GRADIO_SERVER_NAME=0.0.0.0
+      - GRADIO_SERVER_PORT=7860
+      # OpenAI Configuration
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_API_BASE=${OPENAI_API_BASE:-https://api.openai.com/v1}
+      - OPENAI_CHAT_MODEL=${OPENAI_CHAT_MODEL:-gpt-4o-mini}
+      - OPENAI_EMBEDDINGS_MODEL=${OPENAI_EMBEDDINGS_MODEL:-text-embedding-3-large}
+      # Cohere Configuration
+      - COHERE_API_KEY=${COHERE_API_KEY}
+      # Azure OpenAI Configuration (optional)
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - OPENAI_API_VERSION=${OPENAI_API_VERSION:-2024-02-15-preview}
+      - AZURE_OPENAI_CHAT_DEPLOYMENT=${AZURE_OPENAI_CHAT_DEPLOYMENT}
+      - AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT=${AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT}
+      # Local Models Configuration (optional)
+      - LOCAL_MODEL=${LOCAL_MODEL}
+      - LOCAL_MODEL_EMBEDDINGS=${LOCAL_MODEL_EMBEDDINGS}
+      # GraphRAG Configuration (optional)
+      - GRAPHRAG_API_KEY=${GRAPHRAG_API_KEY}
+      - GRAPHRAG_LLM_MODEL=${GRAPHRAG_LLM_MODEL:-gpt-4o-mini}
+      - GRAPHRAG_EMBEDDING_MODEL=${GRAPHRAG_EMBEDDING_MODEL:-text-embedding-3-small}
+      - USE_CUSTOMIZED_GRAPHRAG_SETTING=${USE_CUSTOMIZED_GRAPHRAG_SETTING:-false}
+      # GraphRAG Variants (enable as needed)
+      - USE_NANO_GRAPHRAG=${USE_NANO_GRAPHRAG:-false}
+      - USE_LIGHTRAG=${USE_LIGHTRAG:-false}
+      - USE_MS_GRAPHRAG=${USE_MS_GRAPHRAG:-false}
+      # Other APIs (optional)
+      - VOYAGE_API_KEY=${VOYAGE_API_KEY}
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      # Document Intelligence (optional)
+      - AZURE_DI_ENDPOINT=${AZURE_DI_ENDPOINT}
+      - AZURE_DI_CREDENTIAL=${AZURE_DI_CREDENTIAL}
+      # Adobe PDF Services (optional)
+      - PDF_SERVICES_CLIENT_ID=${PDF_SERVICES_CLIENT_ID}
+      - PDF_SERVICES_CLIENT_SECRET=${PDF_SERVICES_CLIENT_SECRET}
+    volumes:
+      - ./ktem_app_data:/app/ktem_app_data
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Ollama service for local models
+  ollama:
+    image: ollama/ollama:latest
+    container_name: kotaemon-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    profiles:
+      - local-models
+
+  # Optional: Elasticsearch for advanced document storage
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    container_name: kotaemon-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    restart: unless-stopped
+    profiles:
+      - elasticsearch
+
+volumes:
+  ollama_data:
+  es_data:
+
+# ================================================
+# USAGE INSTRUCTIONS:
+# 
+# 1. Copy your .env file to the project root
+# 2. Run the basic stack:
+#    docker-compose -f docker-compose.example.yml up -d
+#
+# 3. Run with local models (Ollama):
+#    docker-compose -f docker-compose.example.yml --profile local-models up -d
+#
+# 4. Run with Elasticsearch:
+#    docker-compose -f docker-compose.example.yml --profile elasticsearch up -d
+#
+# 5. Run everything:
+#    docker-compose -f docker-compose.example.yml --profile local-models --profile elasticsearch up -d
+#
+# 6. Stop services:
+#    docker-compose -f docker-compose.example.yml down
+#
+# 7. Stop and remove volumes:
+#    docker-compose -f docker-compose.example.yml down -v
+# ================================================
